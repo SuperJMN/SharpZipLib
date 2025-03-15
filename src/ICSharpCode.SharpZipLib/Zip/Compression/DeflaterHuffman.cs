@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace ICSharpCode.SharpZipLib.Zip.Compression
 {
@@ -12,6 +15,14 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 	/// </summary>
 	public class DeflaterHuffman
 	{
+		// Agregamos un Subject para emitir cada bloque creado.
+		private readonly Subject<DeflateBlockInfo> blockCreatedSubject = new Subject<DeflateBlockInfo>();
+
+		/// <summary>
+		/// Observable que notifica cuando se crea un bloque.
+		/// </summary>
+		public IObservable<DeflateBlockInfo> BlockCreated => blockCreatedSubject.AsObservable();
+
 		private const int BUFSIZE = 1 << (DeflaterConstants.DEFAULT_MEM_LEVEL + 6);
 		private const int LITERAL_NUM = 286;
 
@@ -775,6 +786,20 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 			pending.WriteShort(storedLength);
 			pending.WriteShort(~storedLength);
 			pending.WriteBlock(stored, storedOffset, storedLength);
+
+			// Aquí capturamos la información del bloque.
+			byte[] compressedData = pending.GetBufferCopy();
+			var blockInfo = new DeflateBlockInfo
+			{
+				BlockType = DeflaterConstants.STORED_BLOCK,
+				OriginalData = stored.Skip(storedOffset).Take(storedLength).ToArray(),
+				// Supongamos que añadimos en DeflaterPending un método para obtener
+				// los datos comprimidos. Si no existe, habría que implementarlo.
+				CompressedData = compressedData, 
+				IsLastBlock = lastBlock
+			};
+			blockCreatedSubject.OnNext(blockInfo);
+
 			Reset();
 		}
 
@@ -844,6 +869,17 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 				literalTree.SetStaticCodes(staticLCodes, staticLLength);
 				distTree.SetStaticCodes(staticDCodes, staticDLength);
 				CompressBlock();
+
+				byte[] compressedData = pending.GetBufferCopy();
+				var blockInfo = new DeflateBlockInfo
+				{
+					BlockType = DeflaterConstants.STATIC_TREES,
+					OriginalData = stored.Skip(storedOffset).Take(storedLength).ToArray(),
+					CompressedData = compressedData,
+					IsLastBlock = lastBlock
+				};
+				blockCreatedSubject.OnNext(blockInfo);
+
 				Reset();
 			}
 			else
@@ -852,6 +888,17 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 				pending.WriteBits((DeflaterConstants.DYN_TREES << 1) + (lastBlock ? 1 : 0), 3);
 				SendAllTrees(blTreeCodes);
 				CompressBlock();
+
+				byte[] compressedData = pending.GetBufferCopy();
+				var blockInfo = new DeflateBlockInfo
+				{
+					BlockType = DeflaterConstants.DYN_TREES,
+					OriginalData = stored.Skip(storedOffset).Take(storedLength).ToArray(),
+					CompressedData = compressedData,
+					IsLastBlock = lastBlock
+				};
+				blockCreatedSubject.OnNext(blockInfo);
+
 				Reset();
 			}
 		}

@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace ICSharpCode.SharpZipLib.Zip.Compression
 {
@@ -192,7 +195,11 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 			SetStrategy(DeflateStrategy.Default);
 			SetLevel(level);
 			Reset();
+
+			BlockCreated = engine.BlockCreated;
 		}
+
+		public IObservable<DeflateBlockInfo> BlockCreated { get; }
 
 		#endregion Constructors
 

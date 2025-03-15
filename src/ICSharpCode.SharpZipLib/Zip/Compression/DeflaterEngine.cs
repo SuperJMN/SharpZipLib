@@ -81,6 +81,7 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 		{
 			this.pending = pending;
 			huffman = new DeflaterHuffman(pending);
+			BlockCreated = huffman.BlockCreated;
 			if (!noAdlerCalculation)
 				adler = new Adler32();
 
@@ -296,6 +297,8 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 				strategy = value;
 			}
 		}
+
+		public IObservable<DeflateBlockInfo> BlockCreated { get; }
 
 		/// <summary>
 		/// Set the deflate level (0-9)

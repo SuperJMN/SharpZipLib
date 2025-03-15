@@ -1,3 +1,5 @@
+using System;
+
 namespace ICSharpCode.SharpZipLib.Zip.Compression
 {
 	/// <summary>
@@ -10,6 +12,15 @@ namespace ICSharpCode.SharpZipLib.Zip.Compression
 	/// </summary>
 	public class PendingBuffer
 	{
+		public byte[] GetBufferCopy()
+		{
+			AlignToByte(); // Alineamos para asegurarnos de tener bytes completos.
+			int length = end - start;
+			byte[] result = new byte[length];
+			Array.Copy(buffer, start, result, 0, length);
+			return result;
+		}
+
 		#region Instance Fields
 
 		/// <summary>

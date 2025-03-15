@@ -34,11 +34,12 @@ Please see https://github.com/icsharpcode/SharpZipLib/wiki/Release-1.4.2 for mor
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+		<PackageReference Include="System.Reactive" Version="6.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="System.Memory" Version="4.5.4" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.0" />
 	</ItemGroup>
 
 	<ItemGroup>
